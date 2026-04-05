@@ -74,8 +74,9 @@ function ContentCard({ item }: { item: ContentItem }) {
         { left: '\\[', right: '\\]', display: true },
       ],
       throwOnError: false,
+      trust: false,
     });
-  }, [expanded, item.type, item.id]);
+  }, [expanded, item.type, item.content]);
 
   return (
     <div className="border rounded-lg shadow-sm bg-white hover:shadow-md transition-shadow">
