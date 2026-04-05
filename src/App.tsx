@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent, useMemo, useCallback } from 'react';
 import renderMathInElement from 'katex/contrib/auto-render';
 import type { ContentItem, ContentType, Subject } from './types';
 import {
@@ -100,7 +100,14 @@ function FilterBtn({
 function ContentCard({ item }: { item: ContentItem }) {
   const [expanded, setExpanded] = useState(false);
   const courseTextRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const courseBlocks = item.type === 'course' ? parseCourseContent(item.content) : [];
+  const courseBlocks = useMemo(
+    () => (item.type === 'course' ? parseCourseContent(item.content) : []),
+    [item.type, item.content],
+  );
+
+  const setCourseTextRef = useCallback((index: number, el: HTMLDivElement | null) => {
+    courseTextRefs.current[index] = el;
+  }, []);
 
   useEffect(() => {
     if (!expanded || item.type !== 'course') return;
@@ -117,7 +124,7 @@ function ContentCard({ item }: { item: ContentItem }) {
         trust: false,
       });
     }
-  }, [expanded, item.type, item.content]);
+  }, [expanded, item.type, courseBlocks]);
 
   return (
     <div className="border rounded-lg shadow-sm bg-white hover:shadow-md transition-shadow">
@@ -159,7 +166,7 @@ function ContentCard({ item }: { item: ContentItem }) {
                   <div
                     key={`text-${index}`}
                     ref={(el) => {
-                      courseTextRefs.current[index] = el;
+                      setCourseTextRef(index, el);
                     }}
                     className="text-sm text-slate-700 whitespace-pre-line leading-relaxed"
                   >
@@ -509,7 +516,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 placeholder={
                   form.type === 'code'
                     ? 'Paste your code here'
-                    : 'Full course content / notes. Use $...$ or $$...$$ for LaTeX. Add figures with ![alt](https://image-url "caption").'
+                    : 'Full course content / notes. Use $...$ or $$...$$ for LaTeX. Add figures with ![alt](https://image-url "caption") or ![alt](./image.png "caption").'
                 }
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
