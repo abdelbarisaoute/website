@@ -535,7 +535,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 placeholder={
                   form.type === 'code'
                     ? 'Paste your code here'
-                    : 'Full course content / notes. Use $...$, $$...$$, \\(...\\), or \\begin{equation}...\\end{equation} for LaTeX. Add figures with ![alt](https://image-url "caption") or ![alt](./image.png "caption").'
+                    : 'Full course content / notes. Use $...$, $$...$$, \\(...\\), or equation environments like \\begin{equation}/\\end{equation}, \\begin{align}/\\end{align}, and \\begin{gather}/\\end{gather}. Add figures with ![alt](https://image-url "caption") or ![alt](./image.png "caption").'
                 }
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
