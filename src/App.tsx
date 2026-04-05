@@ -40,22 +40,36 @@ function isSafeImageUrl(url: string): boolean {
 }
 
 function parseCourseContent(content: string): CourseBlock[] {
-  return content
-    .split(/\n{2,}/)
-    .map((part) => part.trim())
-    .filter(Boolean)
-    .map((part) => {
-      const match = part.match(FIGURE_BLOCK_RE);
-      if (match && isSafeImageUrl(match[2])) {
-        return {
-          kind: 'figure' as const,
-          alt: match[1] || 'Course figure',
-          src: match[2],
-          caption: match[3],
-        };
-      }
-      return { kind: 'text' as const, value: part };
-    });
+  const lines = content.split('\n');
+  const blocks: CourseBlock[] = [];
+  let textBuffer: string[] = [];
+
+  const flushText = () => {
+    if (textBuffer.length > 0 && textBuffer.some((line) => line.trim())) {
+      const value = textBuffer.join('\n');
+      blocks.push({ kind: 'text', value });
+    }
+    textBuffer.length = 0;
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    const match = trimmed.match(FIGURE_BLOCK_RE);
+    if (match && isSafeImageUrl(match[2])) {
+      flushText();
+      blocks.push({
+        kind: 'figure',
+        alt: match[1] || 'Course figure',
+        src: match[2],
+        caption: match[3],
+      });
+      continue;
+    }
+    textBuffer.push(line);
+  }
+
+  flushText();
+  return blocks;
 }
 
 function Badge({ label, variant }: { label: string; variant: 'subject' | 'type' }) {
