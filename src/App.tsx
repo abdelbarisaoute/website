@@ -311,6 +311,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
   const handleDelete = (id: string) => {
     if (!window.confirm('Delete this item?')) return;
+    if (editing?.id === id) resetForm();
     const updated = items.filter((it) => it.id !== id);
     setItems(updated);
     saveContent(updated);
@@ -511,7 +512,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             Default password is <code className="font-mono">admin</code>. Change it here.
           </p>
           <button
-            onClick={() => setShowPassForm(!showPassForm)}
+            onClick={() => { setShowPassForm(!showPassForm); setPassMsg(''); }}
             className="text-sm text-blue-600 hover:underline"
           >
             {showPassForm ? 'Hide' : 'Change password'}
