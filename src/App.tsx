@@ -49,7 +49,7 @@ function parseCourseContent(content: string): CourseBlock[] {
       const value = textBuffer.join('\n');
       blocks.push({ kind: 'text', value });
     }
-    textBuffer = [];
+    textBuffer.length = 0;
   };
 
   for (const line of lines) {
