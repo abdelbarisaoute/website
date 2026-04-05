@@ -21,6 +21,43 @@ const TYPE_COLORS: Record<string, string> = {
   code: 'bg-orange-100 text-orange-800',
 };
 
+type CourseBlock =
+  | { kind: 'text'; value: string }
+  | { kind: 'figure'; alt: string; src: string; caption?: string };
+
+const FIGURE_BLOCK_RE = /^!\[(.*?)\]\((\S+?)(?:\s+"(.*?)")?\)$/;
+
+function isSafeImageUrl(url: string): boolean {
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+  if (trimmed.startsWith('/') || trimmed.startsWith('./') || trimmed.startsWith('../')) return true;
+  try {
+    const parsed = new URL(trimmed);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function parseCourseContent(content: string): CourseBlock[] {
+  return content
+    .split(/\n{2,}/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => {
+      const match = part.match(FIGURE_BLOCK_RE);
+      if (match && isSafeImageUrl(match[2])) {
+        return {
+          kind: 'figure' as const,
+          alt: match[1] || 'Course figure',
+          src: match[2],
+          caption: match[3],
+        };
+      }
+      return { kind: 'text' as const, value: part };
+    });
+}
+
 function Badge({ label, variant }: { label: string; variant: 'subject' | 'type' }) {
   const cls =
     variant === 'subject'
@@ -62,20 +99,24 @@ function FilterBtn({
 
 function ContentCard({ item }: { item: ContentItem }) {
   const [expanded, setExpanded] = useState(false);
-  const courseContentRef = useRef<HTMLDivElement>(null);
+  const courseTextRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const courseBlocks = item.type === 'course' ? parseCourseContent(item.content) : [];
 
   useEffect(() => {
-    if (!expanded || item.type !== 'course' || !courseContentRef.current) return;
-    renderMathInElement(courseContentRef.current, {
-      delimiters: [
-        { left: '$$', right: '$$', display: true },
-        { left: '$', right: '$', display: false },
-        { left: '\\(', right: '\\)', display: false },
-        { left: '\\[', right: '\\]', display: true },
-      ],
-      throwOnError: false,
-      trust: false,
-    });
+    if (!expanded || item.type !== 'course') return;
+    for (const node of courseTextRefs.current) {
+      if (!node) continue;
+      renderMathInElement(node, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true },
+          { left: '$', right: '$', display: false },
+          { left: '\\(', right: '\\)', display: false },
+          { left: '\\[', right: '\\]', display: true },
+        ],
+        throwOnError: false,
+        trust: false,
+      });
+    }
   }, [expanded, item.type, item.content]);
 
   return (
@@ -98,11 +139,34 @@ function ContentCard({ item }: { item: ContentItem }) {
               <code>{item.content}</code>
             </pre>
           ) : (
-            <div
-              ref={courseContentRef}
-              className="text-sm text-slate-700 whitespace-pre-line leading-relaxed"
-            >
-              {item.content}
+            <div className="space-y-4">
+              {courseBlocks.map((block, index) =>
+                block.kind === 'figure' ? (
+                  <figure key={`figure-${index}`} className="rounded border bg-slate-50 p-3">
+                    <img
+                      src={block.src}
+                      alt={block.alt}
+                      loading="lazy"
+                      className="w-full max-h-96 object-contain rounded bg-white"
+                    />
+                    {(block.caption || block.alt) && (
+                      <figcaption className="mt-2 text-xs text-slate-500 text-center">
+                        {block.caption || block.alt}
+                      </figcaption>
+                    )}
+                  </figure>
+                ) : (
+                  <div
+                    key={`text-${index}`}
+                    ref={(el) => {
+                      courseTextRefs.current[index] = el;
+                    }}
+                    className="text-sm text-slate-700 whitespace-pre-line leading-relaxed"
+                  >
+                    {block.value}
+                  </div>
+                ),
+              )}
             </div>
           )}
           {item.language && (
@@ -445,7 +509,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 placeholder={
                   form.type === 'code'
                     ? 'Paste your code here'
-                    : 'Full course content / notes'
+                    : 'Full course content / notes. Use $...$ or $$...$$ for LaTeX. Add figures with ![alt](https://image-url "caption").'
                 }
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
