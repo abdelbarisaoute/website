@@ -45,8 +45,10 @@ function parseCourseContent(content: string): CourseBlock[] {
   let textBuffer: string[] = [];
 
   const flushText = () => {
-    const value = textBuffer.join('\n');
-    if (value.trim()) blocks.push({ kind: 'text', value });
+    if (textBuffer.length > 0 && textBuffer.some((line) => line.trim())) {
+      const value = textBuffer.join('\n');
+      blocks.push({ kind: 'text', value });
+    }
     textBuffer = [];
   };
 
