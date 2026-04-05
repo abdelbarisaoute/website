@@ -132,7 +132,12 @@ function ContentCard({ item }: { item: ContentItem }) {
           { left: '$$', right: '$$', display: true },
           { left: '$', right: '$', display: false },
           { left: '\\(', right: '\\)', display: false },
-          { left: '\\[', right: '\\]', display: true },
+          { left: '\\begin{equation}', right: '\\end{equation}', display: true },
+          { left: '\\begin{equation*}', right: '\\end{equation*}', display: true },
+          { left: '\\begin{align}', right: '\\end{align}', display: true },
+          { left: '\\begin{align*}', right: '\\end{align*}', display: true },
+          { left: '\\begin{gather}', right: '\\end{gather}', display: true },
+          { left: '\\begin{gather*}', right: '\\end{gather*}', display: true },
         ],
         throwOnError: false,
         trust: false,
@@ -530,7 +535,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 placeholder={
                   form.type === 'code'
                     ? 'Paste your code here'
-                    : 'Full course content / notes. Use $...$ or $$...$$ for LaTeX. Add figures with ![alt](https://image-url "caption") or ![alt](./image.png "caption").'
+                    : 'Full course content / notes. Use $...$, $$...$$, \\(...\\), or \\begin{equation}...\\end{equation} for LaTeX. Add figures with ![alt](https://image-url "caption") or ![alt](./image.png "caption").'
                 }
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
