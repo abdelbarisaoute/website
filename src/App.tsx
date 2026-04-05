@@ -1,4 +1,5 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
+import renderMathInElement from 'katex/contrib/auto-render';
 import type { ContentItem, ContentType, Subject } from './types';
 import {
   loadContent,
@@ -61,6 +62,21 @@ function FilterBtn({
 
 function ContentCard({ item }: { item: ContentItem }) {
   const [expanded, setExpanded] = useState(false);
+  const courseContentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!expanded || item.type !== 'course' || !courseContentRef.current) return;
+    renderMathInElement(courseContentRef.current, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false },
+        { left: '\\[', right: '\\]', display: true },
+      ],
+      throwOnError: false,
+    });
+  }, [expanded, item.type, item.content]);
+
   return (
     <div className="border rounded-lg shadow-sm bg-white hover:shadow-md transition-shadow">
       <button className="w-full text-left p-4" onClick={() => setExpanded(!expanded)}>
@@ -81,9 +97,12 @@ function ContentCard({ item }: { item: ContentItem }) {
               <code>{item.content}</code>
             </pre>
           ) : (
-            <p className="text-sm text-slate-700 whitespace-pre-line leading-relaxed">
+            <div
+              ref={courseContentRef}
+              className="text-sm text-slate-700 whitespace-pre-line leading-relaxed"
+            >
               {item.content}
-            </p>
+            </div>
           )}
           {item.language && (
             <p className="text-xs text-slate-400 mt-2">Language: {item.language}</p>
@@ -594,4 +613,3 @@ export default function App() {
 
   return <PublicView />;
 }
-
