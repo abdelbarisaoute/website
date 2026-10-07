@@ -1,0 +1,46 @@
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+:root {
+  --background: #f8fafc;
+  --surface: #ffffff;
+  --foreground: #0f172a;
+  --muted: #475569;
+  --border: #e2e8f0;
+  --accent: #1d4ed8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #020617;
+    --surface: #0f172a;
+    --foreground: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #1e293b;
+    --accent: #60a5fa;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.prose-math {
+  max-width: 75ch;
+  line-height: 1.8;
+}
+
+.prose-math :where(.katex-display) {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5rem 0;
+}
+
+.prose-math :where(p, li) {
+  color: var(--foreground);
+}
+
+.prose-math :where(h1, h2, h3, h4) {
+  scroll-margin-top: 5rem;
+}
